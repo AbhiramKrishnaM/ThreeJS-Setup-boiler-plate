@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import fragment from "./shaders/fragment.glsl";
 import vertex from "./shaders/vertex.glsl";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export default class Sketch {
   constructor() {
@@ -11,19 +12,18 @@ export default class Sketch {
     this.camera = new THREE.PerspectiveCamera(
       70,
       window.innerWidth / window.innerHeight,
-      0.01,
-      10
+      0.1,
+      3000
     );
-    this.camera.position.z = 1;
+    this.camera.position.z = 1000;
     this.scene = new THREE.Scene();
-    this.addMesh();
     this.time = 0;
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.addMesh();
     this.render();
   }
 
   addMesh() {
-    this.geometry = new THREE.PlaneGeometry(1, 1);
-    this.material = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
     this.material = new THREE.ShaderMaterial({
       fragmentShader: fragment,
       vertexShader: vertex,
@@ -32,16 +32,36 @@ export default class Sketch {
       },
       side: THREE.DoubleSide,
     });
+
+    this.geometry = new THREE.BufferGeometry();
+    let number = 512 * 512;
+    this.positions = new THREE.BufferAttribute(new Float32Array(number * 3), 3);
+    this.coordinates = new THREE.BufferAttribute(
+      new Float32Array(number * 3),
+      3
+    );
+
+    let index = 0;
+
+    for (let i = 0; i < 512; i++) {
+      let posX = i - 256;
+      for (let j = 0; j < 512; j++) {
+        this.positions.setXYZ(index, posX * 2, (j - 256) * 2, 0);
+        this.coordinates.setXYZ(index, i, j, 0);
+        index++;
+      }
+    }
+
+    this.geometry.setAttribute("position", this.positions);
+    this.geometry.setAttribute("aCoordinates", this.coordinates);
+
     this.mesh = new THREE.Points(this.geometry, this.material);
     this.scene.add(this.mesh);
   }
 
   render() {
     this.time++;
-    this.mesh.rotation.x += 0.01;
-    this.mesh.rotation.y += 0.02;
     this.renderer.render(this.scene, this.camera);
-    console.log(this.time);
     window.requestAnimationFrame(this.render.bind(this));
   }
 }
