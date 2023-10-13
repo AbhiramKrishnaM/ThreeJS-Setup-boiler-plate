@@ -1,1 +1,2 @@
-## Yuri starter template for three js projects
+# Three Js starter template.
+- Reference from Yuri three js example video
